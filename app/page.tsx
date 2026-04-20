@@ -1,100 +1,224 @@
-import Image from "next/image";
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { CVUpload } from "@/components/CVUpload";
+import { ExtraProjectsPanel } from "@/components/ExtraProjectsPanel";
+import { JobDescriptionInput } from "@/components/JobDescriptionInput";
+import { CVOutput } from "@/components/CVOutput";
+import { MatchInsights } from "@/components/MatchInsights";
+import { TemplateSelector } from "@/components/TemplateSelector";
+import { DownloadButtons } from "@/components/DownloadButtons";
+import { applySkillGapToCv } from "@/lib/applySkillGap";
+import { DEFAULT_TEMPLATE } from "@/lib/cvTemplates";
+import type { CVTemplateId, ExtraProjectInput, TailoredCV } from "@/lib/types/cv";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [cvText, setCvText] = useState("");
+  const [jobDescription, setJobDescription] = useState("");
+  const [extraProjects, setExtraProjects] = useState<ExtraProjectInput[]>([]);
+  const [result, setResult] = useState<TailoredCV | null>(null);
+  const [template, setTemplate] = useState<CVTemplateId>(DEFAULT_TEMPLATE);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [extractNotice, setExtractNotice] = useState<string | null>(null);
+  const prevLoading = useRef(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  const handleAddSkillFromGap = useCallback((gapRaw: string) => {
+    setResult((prev) => (prev ? applySkillGapToCv(prev, gapRaw) : null));
+  }, []);
+
+  useEffect(() => {
+    if (prevLoading.current && !loading && result) {
+      void import("canvas-confetti").then(({ default: confetti }) => {
+        confetti({
+          particleCount: 90,
+          spread: 65,
+          origin: { y: 0.55 },
+          colors: ["#00E5CC", "#ffffff", "#22d3ee"],
+        });
+      });
+    }
+    prevLoading.current = loading;
+  }, [loading, result]);
+
+  const handleTailor = useCallback(async () => {
+    setError(null);
+    setExtractNotice(null);
+    if (!cvText.trim()) {
+      setError("Add your CV by uploading a file or pasting the text.");
+      return;
+    }
+    if (!jobDescription.trim()) {
+      setError("Paste the job description you want to target.");
+      return;
+    }
+
+    setLoading(true);
+    setResult(null);
+    try {
+      const payload = {
+        cvText,
+        jobDescription,
+        extraProjects: extraProjects.map(
+          ({ name, description, techStack, date }) => ({
+            name,
+            description,
+            techStack,
+            date,
+          })
+        ),
+      };
+
+      const res = await fetch("/api/tailor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Something went wrong. Please try again.");
+        return;
+      }
+      if (!data.tailoredCV) {
+        setError("Unexpected response from the server.");
+        return;
+      }
+      setResult(data.tailoredCV as TailoredCV);
+    } catch {
+      setError("Network error. Check your connection and try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, [cvText, jobDescription, extraProjects]);
+
+  return (
+    <div className="min-h-screen bg-[#0A0A0A] text-zinc-100">
+      <header className="border-b border-[#222222] bg-[#0A0A0A]/95 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-6 sm:flex-row sm:items-end sm:justify-between sm:px-6 lg:px-8">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+              CV Tailor AI
+            </h1>
+            <p className="mt-1 max-w-xl text-sm text-zinc-500">
+              Upload or paste your CV, add optional projects, paste a job
+              description, and get a tailored, ATS-aware version you can export.
+            </p>
+          </div>
+          <p className="text-xs text-zinc-600">
+            Powered by Qwen · runs in your browser + secure API routes
+          </p>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-8 lg:flex-row lg:gap-10">
+          <section className="relative z-[1] flex w-full flex-col lg:w-[40%] lg:max-w-none">
+            <CVUpload
+              cvText={cvText}
+              onCvTextChange={(t) => {
+                setCvText(t);
+                setExtractNotice(null);
+              }}
+              onExtractSuccess={({ filename, chars }) => {
+                setExtractNotice(
+                  `Extracted “${filename}” (${chars.toLocaleString()} characters).`
+                );
+                setError(null);
+              }}
+              onExtractError={(msg) => {
+                setExtractNotice(null);
+                setError(msg);
+              }}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+
+            {extractNotice ?
+              <div
+                className="mt-3 rounded-lg border border-[#00E5CC]/25 bg-[#00E5CC]/10 px-3 py-2 text-sm text-[#00E5CC]"
+                role="status"
+              >
+                {extractNotice}
+              </div>
+            : null}
+
+            <ExtraProjectsPanel
+              projects={extraProjects}
+              onChange={setExtraProjects}
+            />
+          </section>
+
+          <section className="flex w-full flex-1 flex-col gap-4 lg:w-[60%]">
+            <JobDescriptionInput
+              value={jobDescription}
+              onChange={setJobDescription}
+            />
+
+            <button
+              type="button"
+              onClick={() => void handleTailor()}
+              disabled={loading}
+              className="inline-flex w-full items-center justify-center rounded-xl bg-[#00E5CC] px-6 py-4 text-base font-semibold text-[#0A0A0A] shadow-lg shadow-[#00E5CC]/10 transition hover:bg-[#33ecd9] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#00E5CC] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:self-start"
+            >
+              {loading ?
+                <>
+                  <span className="mr-3 inline-block h-5 w-5 animate-spin rounded-full border-2 border-[#0A0A0A] border-t-transparent" />
+                  Tailoring your CV…
+                </>
+              : "Tailor my CV"}
+            </button>
+
+            {error ?
+              <div
+                className="rounded-lg border border-red-900/50 bg-red-950/40 px-4 py-3 text-sm text-red-200"
+                role="alert"
+              >
+                {error}
+              </div>
+            : null}
+
+            <div className="relative z-0 space-y-4">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+                Tailored output
+              </h2>
+
+              {result && !loading ?
+                <>
+                  <MatchInsights
+                    matchScore={result.matchScore ?? 0}
+                    skillGaps={result.skillGaps ?? []}
+                    onAddSkillFromGap={handleAddSkillFromGap}
+                  />
+                  <div className="rounded-xl border border-[#222222] bg-[#111111] p-5">
+                    <TemplateSelector selected={template} onSelect={setTemplate} />
+                  </div>
+                </>
+              : null}
+
+              <div
+                style={{
+                  overflowX: "auto",
+                  overflowY: "visible",
+                  width: "100%",
+                }}
+              >
+                <CVOutput data={result} template={template} loading={loading} />
+              </div>
+              <DownloadButtons tailored={result} disabled={loading} template={template} />
+            </div>
+          </section>
         </div>
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+
+      <footer className="border-t border-[#222222] py-8 text-center text-xs text-zinc-600">
+        CV Tailor AI — client-side UX with Next.js API routes. Set{" "}
+        <code className="rounded bg-zinc-900 px-1 py-0.5 text-zinc-400">
+          QWEN_API_KEY
+        </code>{" "}
+        in{" "}
+        <code className="rounded bg-zinc-900 px-1 py-0.5 text-zinc-400">
+          .env.local
+        </code>
+        .
       </footer>
     </div>
   );
