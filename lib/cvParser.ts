@@ -1,3 +1,5 @@
+/** Must load before `pdf-parse` so pdfjs gets Node canvas + DOMMatrix polyfills (Vercel / serverless). */
+import { CanvasFactory } from "pdf-parse/worker";
 import { PDFParse } from "pdf-parse";
 import mammoth from "mammoth";
 
@@ -18,7 +20,10 @@ export async function extractCvText(
 ): Promise<string> {
   switch (kind) {
     case "pdf": {
-      const parser = new PDFParse({ data: new Uint8Array(buffer) });
+      const parser = new PDFParse({
+        data: new Uint8Array(buffer),
+        CanvasFactory,
+      });
       try {
         const textResult = await parser.getText();
         return normalizeWhitespace(textResult.text ?? "");

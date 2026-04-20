@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@napi-rs/canvas": "0.1.80",
     "canvas-confetti": "^1.9.4",
     "docx": "^9.6.1",
     "html2canvas": "^1.4.1",
