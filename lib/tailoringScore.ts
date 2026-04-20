@@ -85,7 +85,7 @@ function tokenizeKeywords(text: string): string[] {
     if (STOPWORDS.has(w)) continue;
     unique.add(w);
   }
-  return [...unique];
+  return Array.from(unique);
 }
 
 function flattenCvText(cv: CvDocument): string {

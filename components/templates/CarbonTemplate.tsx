@@ -49,7 +49,7 @@ export function CarbonTemplate({ data }: { data: CvDocument }) {
         <p style={{ fontSize: "14px", color: ACCENT, marginTop: "6px" }}>{pi.title || ""}</p>
         {meta ?
           <div style={{ marginTop: "12px", fontSize: "11px", color: "#888888" }}>
-            {meta.split(" · ").map((part, i, arr) => (
+            {meta.split(" · ").map((part, i) => (
               <span key={i}>
                 {i > 0 ? <span style={{ margin: "0 6px", color: "#555" }}>•</span> : null}
                 {part}

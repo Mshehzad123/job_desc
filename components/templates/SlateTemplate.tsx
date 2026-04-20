@@ -1,4 +1,5 @@
 import type { CvDocument } from "@/lib/types/cv";
+import { webkitColumnBreakInsideAvoid } from "@/components/templates/printCss";
 
 export function SlateTemplate({ data }: { data: CvDocument }) {
   const pi = data.personalInfo ?? {};
@@ -23,7 +24,7 @@ export function SlateTemplate({ data }: { data: CvDocument }) {
         color: "#000000",
       }}
     >
-      <div style={{ textAlign: "center", marginBottom: "20px", breakInside: "avoid", pageBreakInside: "avoid", WebkitColumnBreakInside: "avoid" }}>
+      <div style={{ textAlign: "center", marginBottom: "20px", breakInside: "avoid", pageBreakInside: "avoid", ...webkitColumnBreakInsideAvoid }}>
         <div
           style={{
             fontSize: "28px",
@@ -66,7 +67,7 @@ export function SlateTemplate({ data }: { data: CvDocument }) {
       <div style={{ borderTop: "1px solid #000000", marginBottom: "20px" }} />
 
       {data.summary?.trim() ?
-        <div style={{ breakInside: "avoid", pageBreakInside: "avoid", WebkitColumnBreakInside: "avoid", marginBottom: "20px", display: "block" }}>
+        <div style={{ breakInside: "avoid", pageBreakInside: "avoid", ...webkitColumnBreakInsideAvoid, marginBottom: "20px", display: "block" }}>
           <SlateSectionHeader title="SUMMARY" />
           <p
             style={{
@@ -88,7 +89,7 @@ export function SlateTemplate({ data }: { data: CvDocument }) {
         <div style={{ marginBottom: "20px", display: "block" }}>
           <SlateSectionHeader title="WORK EXPERIENCE" />
           {(data.experience ?? []).map((exp, idx) => (
-            <div key={idx} style={{ breakInside: "avoid", pageBreakInside: "avoid", WebkitColumnBreakInside: "avoid", marginBottom: "16px", display: "block" }}>
+            <div key={idx} style={{ breakInside: "avoid", pageBreakInside: "avoid", ...webkitColumnBreakInsideAvoid, marginBottom: "16px", display: "block" }}>
               <div style={{ display: "table", width: "100%", maxWidth: "100%", tableLayout: "fixed" }}>
                 <span
                   style={{
@@ -168,7 +169,7 @@ export function SlateTemplate({ data }: { data: CvDocument }) {
         <div style={{ marginBottom: "20px", display: "block" }}>
           <SlateSectionHeader title="PROJECTS" />
           {(data.projects ?? []).map((p, idx) => (
-            <div key={idx} style={{ breakInside: "avoid", pageBreakInside: "avoid", WebkitColumnBreakInside: "avoid", marginBottom: "14px", display: "block" }}>
+            <div key={idx} style={{ breakInside: "avoid", pageBreakInside: "avoid", ...webkitColumnBreakInsideAvoid, marginBottom: "14px", display: "block" }}>
               <div style={{ display: "table", width: "100%", maxWidth: "100%", tableLayout: "fixed", marginBottom: "4px" }}>
                 <span style={{ display: "table-cell", fontSize: "12px", fontWeight: 700, color: "#000000", minWidth: 0, wordBreak: "break-word", overflowWrap: "anywhere" }}>{p.name || ""}</span>
                 {p.link ?
@@ -216,7 +217,7 @@ export function SlateTemplate({ data }: { data: CvDocument }) {
         <div style={{ marginBottom: "20px", display: "block" }}>
           <SlateSectionHeader title="EDUCATION" />
           {(data.education ?? []).map((ed, idx) => (
-            <div key={idx} style={{ breakInside: "avoid", pageBreakInside: "avoid", WebkitColumnBreakInside: "avoid", marginBottom: "10px", display: "block" }}>
+            <div key={idx} style={{ breakInside: "avoid", pageBreakInside: "avoid", ...webkitColumnBreakInsideAvoid, marginBottom: "10px", display: "block" }}>
               <div style={{ display: "table", width: "100%", maxWidth: "100%", tableLayout: "fixed" }}>
                 <span style={{ display: "table-cell", fontSize: "12px", fontWeight: 700, color: "#000000" }}>{ed.degree || ""}</span>
                 <span
@@ -257,7 +258,7 @@ export function SlateTemplate({ data }: { data: CvDocument }) {
           ]
             .filter((s) => s.items?.length)
             .map((section, idx) => (
-              <div key={idx} style={{ breakInside: "avoid", pageBreakInside: "avoid", WebkitColumnBreakInside: "avoid", marginBottom: "6px", display: "table", width: "100%", maxWidth: "100%", tableLayout: "fixed" }}>
+              <div key={idx} style={{ breakInside: "avoid", pageBreakInside: "avoid", ...webkitColumnBreakInsideAvoid, marginBottom: "6px", display: "table", width: "100%", maxWidth: "100%", tableLayout: "fixed" }}>
                 <span style={{ display: "table-cell", width: "110px", fontSize: "12px", fontWeight: 700, color: "#000000", verticalAlign: "top" }}>
                   {section.label}:
                 </span>
@@ -271,7 +272,7 @@ export function SlateTemplate({ data }: { data: CvDocument }) {
         <div style={{ display: "block" }}>
           <SlateSectionHeader title="CERTIFICATIONS" />
           {(data.certifications ?? []).map((c, idx) => (
-            <div key={idx} style={{ breakInside: "avoid", pageBreakInside: "avoid", WebkitColumnBreakInside: "avoid", display: "table", width: "100%", maxWidth: "100%", tableLayout: "fixed", marginBottom: "6px" }}>
+            <div key={idx} style={{ breakInside: "avoid", pageBreakInside: "avoid", ...webkitColumnBreakInsideAvoid, display: "table", width: "100%", maxWidth: "100%", tableLayout: "fixed", marginBottom: "6px" }}>
               <span style={{ display: "table-cell", fontSize: "12px", fontWeight: 700, color: "#000000" }}>{c.name || ""}</span>
               <span
                 style={{
@@ -300,7 +301,7 @@ export function SlateTemplate({ data }: { data: CvDocument }) {
 
 function SlateSectionHeader({ title }: { title: string }) {
   return (
-    <div style={{ breakInside: "avoid", pageBreakInside: "avoid", WebkitColumnBreakInside: "avoid", marginBottom: "10px", display: "block" }}>
+    <div style={{ breakInside: "avoid", pageBreakInside: "avoid", ...webkitColumnBreakInsideAvoid, marginBottom: "10px", display: "block" }}>
       <div
         style={{
           fontSize: "12px",

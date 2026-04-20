@@ -62,7 +62,7 @@ export function FrostTemplate({ data }: { data: CvDocument }) {
           <section style={sec}>
             <SH title="SKILLS" />
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-              {categories.flatMap(([_, items]) =>
+              {categories.flatMap(([, items]) =>
                 (items ?? []).map((s, i) =>
                   s?.trim() ?
                     <span
